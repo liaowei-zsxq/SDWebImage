@@ -11,11 +11,12 @@
 #if SD_UIKIT
 
 #import "SDWebImageManager.h"
+#import "UIView+WebCache.h"
 
 /**
  * Integrates SDWebImage async downloading and caching of remote images with UIImageView for highlighted state.
  */
-@interface UIImageView (HighlightedWebCache)
+@interface UIView (UIImageViewHighlightedWebCache) <SDUIImageViewProtocol>
 
 /**
  * Set the imageView `highlightedImage` with an `url`.

@@ -16,7 +16,7 @@
 
 static NSString * const SDHighlightedImageOperationKey = @"UIImageViewImageOperationHighlighted";
 
-@implementation UIImageView (HighlightedWebCache)
+@implementation UIView (UIImageViewHighlightedWebCache)
 
 - (void)sd_setHighlightedImageWithURL:(nullable NSURL *)url {
     [self sd_setHighlightedImageWithURL:url options:0 progress:nil completed:nil];
@@ -61,7 +61,9 @@ static NSString * const SDHighlightedImageOperationKey = @"UIImageViewImageOpera
                              context:mutableContext
                        setImageBlock:^(UIImage * _Nullable image, NSData * _Nullable imageData, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
                            @strongify(self);
-                           self.highlightedImage = image;
+                           if ([self respondsToSelector:@selector(setHighlightedImage:)]) {
+                               self.highlightedImage = image;
+                           }
                        }
                             progress:progressBlock
                            completed:^(UIImage * _Nullable image, NSData * _Nullable data, NSError * _Nullable error, SDImageCacheType cacheType, BOOL finished, NSURL * _Nullable imageURL) {

@@ -198,7 +198,7 @@ const int64_t SDWebImageProgressUnitCountUnknown = 1LL;
     // watchOS does not support view transition. Simplify the logic
     if (setImageBlock) {
         setImageBlock(image, imageData, cacheType, imageURL);
-    } else if ([self isKindOfClass:[UIImageView class]]) {
+    } else if ([self respondsToSelector:@selector(setImage:)]) {
         UIImageView *imageView = (UIImageView *)self;
         [imageView setImage:image];
     }
@@ -211,14 +211,14 @@ const int64_t SDWebImageProgressUnitCountUnknown = 1LL;
     SDSetImageBlock finalSetImageBlock;
     if (setImageBlock) {
         finalSetImageBlock = setImageBlock;
-    } else if ([view isKindOfClass:[UIImageView class]]) {
+    } else if ([view respondsToSelector:@selector(setImage:)]) {
         UIImageView *imageView = (UIImageView *)view;
         finalSetImageBlock = ^(UIImage *setImage, NSData *setImageData, SDImageCacheType setCacheType, NSURL *setImageURL) {
             imageView.image = setImage;
         };
     }
 #if SD_UIKIT
-    else if ([view isKindOfClass:[UIButton class]]) {
+    else if ([view respondsToSelector:@selector(setImage:forState:)]) {
         UIButton *button = (UIButton *)view;
         finalSetImageBlock = ^(UIImage *setImage, NSData *setImageData, SDImageCacheType setCacheType, NSURL *setImageURL) {
             [button setImage:setImage forState:UIControlStateNormal];
@@ -226,7 +226,7 @@ const int64_t SDWebImageProgressUnitCountUnknown = 1LL;
     }
 #endif
 #if SD_MAC
-    else if ([view isKindOfClass:[NSButton class]]) {
+    else if ([view respondsToSelector:@selector(setImage:)]) {
         NSButton *button = (NSButton *)view;
         finalSetImageBlock = ^(UIImage *setImage, NSData *setImageData, SDImageCacheType setCacheType, NSURL *setImageURL) {
             button.image = setImage;
