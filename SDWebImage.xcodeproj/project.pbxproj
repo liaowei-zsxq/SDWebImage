@@ -1189,6 +1189,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				INFOPLIST_FILE = WebImage/Info.plist;
+				MACH_O_TYPE = staticlib;
 			};
 			name = Debug;
 		};
@@ -1197,6 +1198,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				INFOPLIST_FILE = WebImage/Info.plist;
+				MACH_O_TYPE = staticlib;
 			};
 			name = Release;
 		};
@@ -1233,6 +1235,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				INFOPLIST_FILE = WebImage/Info.plist;
+				MACH_O_TYPE = staticlib;
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvsimulator appletvos";
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 				TVOS_DEPLOYMENT_TARGET = 9.2;
@@ -1244,6 +1247,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				INFOPLIST_FILE = WebImage/Info.plist;
+				MACH_O_TYPE = staticlib;
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvsimulator appletvos";
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 				TVOS_DEPLOYMENT_TARGET = 9.2;
