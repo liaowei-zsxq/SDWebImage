@@ -15,8 +15,8 @@
 @protocol SDUIImageViewProtocol <NSObject>
 
 @optional
-- (void)setImage:(UIImage *_Nullable)image;
-- (void)setHighlightedImage:(UIImage *_Nullable)image;
+@property (nullable, nonatomic, strong) UIImage *image;
+@property (nullable, nonatomic, strong) UIImage *highlightedImage;
 
 @end
 
