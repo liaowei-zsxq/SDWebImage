@@ -225,14 +225,6 @@ const int64_t SDWebImageProgressUnitCountUnknown = 1LL;
         };
     }
 #endif
-#if SD_MAC
-    else if ([view respondsToSelector:@selector(setImage:)]) {
-        NSButton *button = (NSButton *)view;
-        finalSetImageBlock = ^(UIImage *setImage, NSData *setImageData, SDImageCacheType setCacheType, NSURL *setImageURL) {
-            button.image = setImage;
-        };
-    }
-#endif
     
     if (transition) {
 #if SD_UIKIT
