@@ -6,9 +6,9 @@
  * file that was distributed with this source code.
  */
 
-#import "SDWebImageCompat.h"
-#import "SDWebImageManager.h"
-#import "UIView+WebCache.h"
+#import <SDWebImage/SDWebImageCompat.h>
+#import <SDWebImage/SDWebImageManager.h>
+#import <SDWebImage/UIView+WebCache.h>
 
 /**
  * Usage with a UITableViewCell sub-class:

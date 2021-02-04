@@ -6,12 +6,12 @@
  * file that was distributed with this source code.
  */
 
-#import "SDWebImageCompat.h"
+#import <SDWebImage/SDWebImageCompat.h>
 
 #if SD_UIKIT
 
-#import "SDWebImageManager.h"
-#import "UIView+WebCache.h"
+#import <SDWebImage/SDWebImageManager.h>
+#import <SDWebImage/UIView+WebCache.h>
 
 /**
  * Integrates SDWebImage async downloading and caching of remote images with UIButton.

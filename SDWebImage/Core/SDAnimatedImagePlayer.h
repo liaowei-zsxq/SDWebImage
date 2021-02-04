@@ -7,8 +7,8 @@
 */
 
 #import <Foundation/Foundation.h>
-#import "SDWebImageCompat.h"
-#import "SDImageCoder.h"
+#import <SDWebImage/SDWebImageCompat.h>
+#import <SDWebImage/SDImageCoder.h>
 
 /// A player to control the playback of animated image, which can be used to drive Animated ImageView or any rendering usage, like CALayer/WatchKit/SwiftUI rendering.
 @interface SDAnimatedImagePlayer : NSObject
