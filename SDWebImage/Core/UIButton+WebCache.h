@@ -11,11 +11,12 @@
 #if SD_UIKIT
 
 #import <SDWebImage/SDWebImageManager.h>
+#import <SDWebImage/UIView+WebCache.h>
 
 /**
  * Integrates SDWebImage async downloading and caching of remote images with UIButton.
  */
-@interface UIButton (WebCache)
+@interface UIControl (WebCache) <SDUIButtonProtocol>
 
 #pragma mark - Image
 

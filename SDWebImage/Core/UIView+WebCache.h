@@ -12,6 +12,26 @@
 #import <SDWebImage/SDWebImageTransition.h>
 #import <SDWebImage/SDWebImageIndicator.h>
 
+@protocol SDUIImageViewProtocol <NSObject>
+
+@optional
+@property (nullable, nonatomic, strong) UIImage *image;
+@property (nullable, nonatomic, strong) UIImage *highlightedImage;
+
+@end
+
+#if SD_UIKIT
+
+@protocol SDUIButtonProtocol <NSObject>
+
+@optional
+- (void)setImage:(UIImage *_Nullable)image forState:(UIControlState)state;
+- (void)setBackgroundImage:(UIImage *_Nullable)image forState:(UIControlState)state;
+
+@end
+
+#endif
+
 /**
  The value specify that the image progress unit count cannot be determined because the progressBlock is not been called.
  */
