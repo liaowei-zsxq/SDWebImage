@@ -9,6 +9,7 @@
 
 #import "SDTestCase.h"
 #import "UIColor+SDHexString.h"
+#import <SDWebImageWebPCoder/SDWebImageWebPCoder.h>
 
 @interface SDWebImageDecoderTests : SDTestCase
 
@@ -95,6 +96,25 @@
     expect(decodedImage.size.height).to.equal(1);
 }
 
+- (void)test07ThatDecodeAndScaleDownAlwaysCompleteRendering {
+    // Check that when the height of the image used is not evenly divisible by the height of the tile, the output image can also be rendered completely.
+    
+    UIColor *imageColor = UIColor.blackColor;
+    CGSize imageSize = CGSizeMake(3024, 4032);
+    CGRect imageRect = CGRectMake(0, 0, imageSize.width, imageSize.height);
+    SDGraphicsImageRendererFormat *format = [[SDGraphicsImageRendererFormat alloc] init];
+    format.scale = 1;
+    SDGraphicsImageRenderer *renderer = [[SDGraphicsImageRenderer alloc] initWithSize:imageSize format:format];
+    UIImage *image = [renderer imageWithActions:^(CGContextRef  _Nonnull context) {
+        CGContextSetFillColorWithColor(context, [imageColor CGColor]);
+        CGContextFillRect(context, imageRect);
+    }];
+    
+    UIImage *decodedImage = [UIImage sd_decodedAndScaledDownImageWithImage:image limitBytes:20 * 1024 * 1024];
+    UIColor *testColor = [decodedImage sd_colorAtPoint:CGPointMake(0, decodedImage.size.height - 1)];
+    expect(testColor.sd_hexString).equal(imageColor.sd_hexString);
+}
+
 - (void)test08ThatEncodeAlphaImageToJPGWithBackgroundColor {
     NSString *testImagePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"TestImage" ofType:@"png"];
     UIImage *image = [[UIImage alloc] initWithContentsOfFile:testImagePath];
@@ -120,7 +140,7 @@
     expect(maxEncodedData).notTo.beNil();
     expect(maxEncodedData.length).beGreaterThan(limitFileSize);
     // 0 quality (smallest)
-    NSData *minEncodedData = [SDImageCodersManager.sharedManager encodedDataWithImage:image format:SDImageFormatJPEG options:@{SDImageCoderEncodeCompressionQuality : @(0)}];
+    NSData *minEncodedData = [SDImageCodersManager.sharedManager encodedDataWithImage:image format:SDImageFormatJPEG options:@{SDImageCoderEncodeCompressionQuality : @(0.01)}]; // Seems 0 has some bugs in old macOS
     expect(minEncodedData).notTo.beNil();
     expect(minEncodedData.length).beLessThan(limitFileSize);
     NSData *limitEncodedData = [SDImageCodersManager.sharedManager encodedDataWithImage:image format:SDImageFormatJPEG options:@{SDImageCoderEncodeMaxFileSize : @(limitFileSize)}];
@@ -246,7 +266,12 @@
 - (void)test18ThatStaticWebPWorks {
     if (@available(iOS 14, tvOS 14, macOS 11, *)) {
         NSURL *staticWebPURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"TestImageStatic" withExtension:@"webp"];
+#if SD_TV
+        /// TV OS does not support ImageIO's webp.
+        [self verifyCoder:[SDImageWebPCoder sharedCoder]
+#else
         [self verifyCoder:[SDImageAWebPCoder sharedCoder]
+#endif
         withLocalImageURL:staticWebPURL
          supportsEncoding:NO // Currently (iOS 14.0) seems no encoding support
            encodingFormat:SDImageFormatWebP
@@ -258,7 +283,12 @@
 - (void)test19ThatAnimatedWebPWorks {
     if (@available(iOS 14, tvOS 14, macOS 11, *)) {
         NSURL *staticWebPURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"TestImageAnimated" withExtension:@"webp"];
+#if SD_TV
+        /// TV OS does not support ImageIO's webp.
+        [self verifyCoder:[SDImageWebPCoder sharedCoder]
+#else
         [self verifyCoder:[SDImageAWebPCoder sharedCoder]
+#endif
         withLocalImageURL:staticWebPURL
          supportsEncoding:NO // Currently (iOS 14.0) seems no encoding support
            encodingFormat:SDImageFormatWebP
@@ -311,6 +341,113 @@
     }
 }
 
+- (void)test22ThatThumbnailDecodeCalculation {
+    NSString *testImagePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"TestImageLarge" ofType:@"jpg"];
+    NSData *testImageData = [NSData dataWithContentsOfFile:testImagePath];
+    CGSize thumbnailSize = CGSizeMake(400, 300);
+    UIImage *image = [SDImageIOCoder.sharedCoder decodedImageWithData:testImageData options:@{
+        SDImageCoderDecodePreserveAspectRatio: @(YES),
+        SDImageCoderDecodeThumbnailPixelSize: @(thumbnailSize)}];
+    CGSize imageSize = image.size;
+    expect(imageSize.width).equal(400);
+    expect(imageSize.height).equal(263);
+}
+
+- (void)test23ThatThumbnailEncodeCalculation {
+    NSString *testImagePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"TestImageLarge" ofType:@"jpg"];
+    NSData *testImageData = [NSData dataWithContentsOfFile:testImagePath];
+    UIImage *image = [SDImageIOCoder.sharedCoder decodedImageWithData:testImageData options:nil];
+    expect(image.size).equal(CGSizeMake(5250, 3450));
+    CGSize thumbnailSize = CGSizeMake(4000, 4000); // 3450 < 4000 < 5250
+    NSData *encodedData = [SDImageIOCoder.sharedCoder encodedDataWithImage:image format:SDImageFormatJPEG options:@{
+            SDImageCoderEncodeMaxPixelSize: @(thumbnailSize)
+    }];
+    UIImage *encodedImage = [UIImage sd_imageWithData:encodedData];
+    expect(encodedImage.size).equal(CGSizeMake(4000, 2629));
+}
+
+- (void)test24ThatScaleSizeCalculation {
+    // preserveAspectRatio true
+    CGSize size1 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(100, 200) scaleSize:CGSizeMake(150, 150) preserveAspectRatio:YES shouldScaleUp:NO];
+    expect(size1).equal(CGSizeMake(75, 150));
+    CGSize size2 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(100, 200) scaleSize:CGSizeMake(150, 150) preserveAspectRatio:YES shouldScaleUp:YES];
+    expect(size2).equal(CGSizeMake(75, 150));
+    CGSize size3 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(100, 200) scaleSize:CGSizeMake(300, 300) preserveAspectRatio:YES shouldScaleUp:NO];
+    expect(size3).equal(CGSizeMake(100, 200));
+    CGSize size4 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(100, 200) scaleSize:CGSizeMake(300, 300) preserveAspectRatio:YES shouldScaleUp:YES];
+    expect(size4).equal(CGSizeMake(150, 300));
+    
+    // preserveAspectRatio false
+    CGSize size5 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(100, 200) scaleSize:CGSizeMake(150, 150) preserveAspectRatio:NO shouldScaleUp:NO];
+    expect(size5).equal(CGSizeMake(100, 150));
+    CGSize size6 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(100, 200) scaleSize:CGSizeMake(150, 150) preserveAspectRatio:NO shouldScaleUp:YES];
+    expect(size6).equal(CGSizeMake(150, 150));
+    
+    // 0 value
+    CGSize size7 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(0, 0) scaleSize:CGSizeMake(999, 999) preserveAspectRatio:NO shouldScaleUp:NO];
+    expect(size7).equal(CGSizeMake(0, 0));
+    CGSize size8 = [SDImageCoderHelper scaledSizeWithImageSize:CGSizeMake(999, 999) scaleSize:CGSizeMake(0, 0) preserveAspectRatio:NO shouldScaleUp:NO];
+    expect(size8).equal(CGSizeMake(999, 999));
+}
+
+- (void)test25ThatBMPWorks {
+    NSURL *bmpURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"TestImage" withExtension:@"bmp"];
+    [self verifyCoder:[SDImageIOCoder sharedCoder]
+    withLocalImageURL:bmpURL
+     supportsEncoding:YES
+       encodingFormat:SDImageFormatBMP
+      isAnimatedImage:NO
+        isVectorImage:NO];
+}
+
+- (void)test26ThatRawImageTypeHintWorks {
+    NSURL *url = [[NSBundle bundleForClass:[self class]] URLForResource:@"TestImage" withExtension:@"nef"];
+    NSData *data = [NSData dataWithContentsOfURL:url];
+    
+    // 1. Test without hint will use TIFF's IFD#0, which size should always be 160x120, see: http://lclevy.free.fr/nef/
+    UIImage *image1 = [SDImageIOCoder.sharedCoder decodedImageWithData:data options:nil];
+    expect(image1.size).equal(CGSizeMake(160, 120));
+    expect(image1.sd_imageFormat).equal(SDImageFormatTIFF);
+    
+#if SD_MAC || SD_IOS
+    // 2. Test with NEF file extension should be NEF
+    UIImage *image2 = [SDImageIOCoder.sharedCoder decodedImageWithData:data options:@{SDImageCoderDecodeFileExtensionHint : @"nef"}];
+    expect(image2.size).equal(CGSizeMake(3008, 2000));
+    expect(image2.sd_imageFormat).equal(SDImageFormatRAW);
+    
+    // 3. Test with UTType hint should be NEF
+    UIImage *image3 = [SDImageIOCoder.sharedCoder decodedImageWithData:data options:@{SDImageCoderDecodeTypeIdentifierHint : @"com.nikon.raw-image"}];
+    expect(image3.size).equal(CGSizeMake(3008, 2000));
+    expect(image3.sd_imageFormat).equal(SDImageFormatRAW);
+#endif
+}
+
+- (void)test27ThatEncodeWithFramesWorks {
+    // Mock
+    NSMutableArray<SDImageFrame *> *frames = [NSMutableArray array];
+    NSUInteger frameCount = 5;
+    for (size_t i = 0; i < frameCount; i++) {
+        CGSize size = CGSizeMake(100, 100);
+        SDGraphicsImageRenderer *renderer = [[SDGraphicsImageRenderer alloc] initWithSize:size];
+        UIImage *image = [renderer imageWithActions:^(CGContextRef  _Nonnull context) {
+            CGContextSetRGBFillColor(context, 1.0 / i, 0.0, 0.0, 1.0);
+            CGContextSetRGBStrokeColor(context, 1.0 / i, 0.0, 0.0, 1.0);
+            CGContextFillRect(context, CGRectMake(0, 0, size.width, size.height));
+        }];
+        SDImageFrame *frame = [SDImageFrame frameWithImage:image duration:0.1];
+        [frames addObject:frame];
+    }
+    
+    // Test old API
+    UIImage *animatedImage = [SDImageCoderHelper animatedImageWithFrames:frames];
+    NSData *data = [SDImageGIFCoder.sharedCoder encodedDataWithImage:animatedImage format:SDImageFormatGIF options:nil];
+    expect(data).notTo.beNil();
+    
+    // Test new API
+    NSData *data2 = [SDImageGIFCoder.sharedCoder encodedDataWithFrames:frames loopCount:0 format:SDImageFormatGIF options:nil];
+    expect(data2).notTo.beNil();
+}
+
 #pragma mark - Utils
 
 - (void)verifyCoder:(id<SDImageCoder>)coder
@@ -358,15 +495,14 @@ withLocalImageURL:(NSURL *)imageUrl
     CGFloat pixelHeight = inputImage.size.height;
     expect(pixelWidth).beGreaterThan(0);
     expect(pixelHeight).beGreaterThan(0);
-    // check vector format supports thumbnail with screen size
+    // check vector format should use 72 DPI
     if (isVector) {
-#if SD_UIKIT
-        CGFloat maxScreenSize = MAX(UIScreen.mainScreen.bounds.size.width, UIScreen.mainScreen.bounds.size.height);
-#else
-        CGFloat maxScreenSize = MAX(NSScreen.mainScreen.frame.size.width, NSScreen.mainScreen.frame.size.height);
-#endif
-        expect(pixelWidth).equal(maxScreenSize);
-        expect(pixelHeight).equal(maxScreenSize);
+        CGRect boxRect = [self boxRectFromPDFData:inputImageData];
+        expect(boxRect.size.width).beGreaterThan(0);
+        expect(boxRect.size.height).beGreaterThan(0);
+        // Since 72 DPI is 1:1 from inch size to pixel size
+        expect(boxRect.size.width).equal(pixelWidth);
+        expect(boxRect.size.height).equal(pixelHeight);
     }
     
     // check thumbnail with scratch
@@ -410,9 +546,7 @@ withLocalImageURL:(NSURL *)imageUrl
         UIImage *outputImage = [coder decodedImageWithData:outputImageData options:nil];
         expect(outputImage.size).to.equal(inputImage.size);
         expect(outputImage.scale).to.equal(inputImage.scale);
-#if SD_UIKIT
-        expect(outputImage.images.count).to.equal(inputImage.images.count);
-#endif
+        expect(outputImage.sd_imageLoopCount).to.equal(inputImage.sd_imageLoopCount);
         
         // check max pixel size encoding with scratch
         CGFloat maxWidth = 50;
@@ -429,13 +563,11 @@ withLocalImageURL:(NSURL *)imageUrl
         // Image/IO's thumbnail API does not always use round to preserve precision, we check ABS <= 1
         expect(ABS(outputMaxImage.size.width - maxPixelSize.width)).beLessThanOrEqualTo(1);
         expect(ABS(outputMaxImage.size.height - maxPixelSize.height)).beLessThanOrEqualTo(1);
-#if SD_UIKIT
-        expect(outputMaxImage.images.count).to.equal(inputImage.images.count);
-#endif
+        expect(outputMaxImage.sd_imageLoopCount).to.equal(inputImage.sd_imageLoopCount);
     }
 }
 
-- (NSArray *)thumbnailImagesFromImageSource:(CGImageSourceRef)source API_AVAILABLE(ios(11.0), tvos(11.0), macos(13.0)) {
+- (NSArray *)thumbnailImagesFromImageSource:(CGImageSourceRef)source API_AVAILABLE(ios(11.0), tvos(11.0), macos(10.13)) {
     NSDictionary *properties = (__bridge_transfer NSDictionary *)CGImageSourceCopyProperties(source, nil);
     NSDictionary *fileProperties = properties[(__bridge NSString *)kCGImagePropertyFileContentsDictionary];
     NSArray *imagesProperties = fileProperties[(__bridge NSString *)kCGImagePropertyImages];
@@ -443,6 +575,31 @@ withLocalImageURL:(NSURL *)imageUrl
     NSArray *thumbnailImages = imageProperties[(__bridge NSString *)kCGImagePropertyThumbnailImages];
     
     return thumbnailImages;
+}
+
+#pragma mark - Utils
+- (CGRect)boxRectFromPDFData:(nonnull NSData *)data {
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
+    if (!provider) {
+        return CGRectZero;
+    }
+    CGPDFDocumentRef document = CGPDFDocumentCreateWithProvider(provider);
+    CGDataProviderRelease(provider);
+    if (!document) {
+        return CGRectZero;
+    }
+    
+    // `CGPDFDocumentGetPage` page number is 1-indexed.
+    CGPDFPageRef page = CGPDFDocumentGetPage(document, 1);
+    if (!page) {
+        CGPDFDocumentRelease(document);
+        return CGRectZero;
+    }
+    
+    CGRect boxRect = CGPDFPageGetBoxRect(page, kCGPDFMediaBox);
+    CGPDFDocumentRelease(document);
+    
+    return boxRect;
 }
 
 @end

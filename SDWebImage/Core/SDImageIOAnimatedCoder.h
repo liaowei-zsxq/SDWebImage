@@ -7,8 +7,7 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <ImageIO/ImageIO.h>
-#import <SDWebImage/SDImageCoder.h>
+#import "SDImageCoder.h"
 
 /**
  This is the abstract class for all animated coder, which use the Image/IO API. You can not use this directly as real coders. A exception will be raised if you use this class.
@@ -24,7 +23,7 @@
  */
 @property (class, readonly) SDImageFormat imageFormat;
 /**
- The supported image format UTI Type. Such as `kUTTypeGIF`.
+ The supported image format UTI Type. Such as `kSDUTTypeGIF`.
  This can be used for cases when we can not detect `SDImageFormat. Such as progressive decoding's hint format `kCGImageSourceTypeIdentifierHint`.
  @note Subclass override.
  */
