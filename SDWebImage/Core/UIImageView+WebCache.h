@@ -44,7 +44,7 @@
 /**
  * Integrates SDWebImage async downloading and caching of remote images with UIImageView.
  */
-@interface UIView (UIImageViewWebCache) <SDUIImageViewProtocol>
+@interface UIImageView (UIImageViewWebCache)
 
 /**
  * Set the imageView `image` with an `url`.

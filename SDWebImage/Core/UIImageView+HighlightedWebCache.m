@@ -16,7 +16,7 @@
 
 static NSString * const SDHighlightedImageOperationKey = @"UIImageViewImageOperationHighlighted";
 
-@implementation UIView (UIImageViewHighlightedWebCache)
+@implementation UIImageView (UIImageViewHighlightedWebCache)
 
 - (void)sd_setHighlightedImageWithURL:(nullable NSURL *)url {
     [self sd_setHighlightedImageWithURL:url options:0 progress:nil completed:nil];

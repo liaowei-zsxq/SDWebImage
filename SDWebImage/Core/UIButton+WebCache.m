@@ -35,7 +35,7 @@ static inline NSString * backgroundImageOperationKeyForState(UIControlState stat
     return [NSString stringWithFormat:@"UIButtonBackgroundImageOperation%lu", (unsigned long)state];
 }
 
-@implementation UIControl (WebCache)
+@implementation UIButton (WebCache)
 
 #pragma mark - Image
 

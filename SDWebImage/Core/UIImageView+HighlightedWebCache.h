@@ -16,7 +16,7 @@
 /**
  * Integrates SDWebImage async downloading and caching of remote images with UIImageView for highlighted state.
  */
-@interface UIView (UIImageViewHighlightedWebCache) <SDUIImageViewProtocol>
+@interface UIImageView (UIImageViewHighlightedWebCache)
 
 /**
  * Set the imageView `highlightedImage` with an `url`.

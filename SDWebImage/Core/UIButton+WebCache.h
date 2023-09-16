@@ -16,7 +16,7 @@
 /**
  * Integrates SDWebImage async downloading and caching of remote images with UIButton.
  */
-@interface UIControl (WebCache) <SDUIButtonProtocol>
+@interface UIButton (WebCache)
 
 #pragma mark - Image
 

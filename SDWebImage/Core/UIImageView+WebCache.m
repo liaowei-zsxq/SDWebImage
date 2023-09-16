@@ -11,7 +11,7 @@
 #import "UIView+WebCacheOperation.h"
 #import "UIView+WebCache.h"
 
-@implementation UIView (UIImageViewWebCache)
+@implementation UIImageView (UIImageViewWebCache)
 
 - (void)sd_setImageWithURL:(nullable NSURL *)url {
     [self sd_setImageWithURL:url placeholderImage:nil options:0 progress:nil completed:nil];
