@@ -14,7 +14,7 @@
 #import "SDImageCacheDefine.h"
 #import "SDCallbackQueue.h"
 
-BOOL SDWebImageDownloaderOperationGetCompleted(id<SDWebImageDownloaderOperation> operation); // Private currently, mark open if needed
+FOUNDATION_IMPORT BOOL SDWebImageDownloaderOperationGetCompleted(id<SDWebImageDownloaderOperation> operation); // Private currently, mark open if needed
 
 // A handler to represent individual request
 @interface SDWebImageDownloaderOperationToken : NSObject

@@ -23,7 +23,7 @@ NSNotificationName const SDWebImageDownloadFinishNotification = @"SDWebImageDown
 static void * SDWebImageDownloaderContext = &SDWebImageDownloaderContext;
 static void * SDWebImageDownloaderOperationKey = &SDWebImageDownloaderOperationKey;
 
-static BOOL SDWebImageDownloaderOperationGetCompleted(id<SDWebImageDownloaderOperation> operation) {
+FOUNDATION_EXPORT BOOL SDWebImageDownloaderOperationGetCompleted(id<SDWebImageDownloaderOperation> operation) {
     NSCParameterAssert(operation);
     NSNumber *value = objc_getAssociatedObject(operation, SDWebImageDownloaderOperationKey);
     if (value != nil) {
